@@ -169,8 +169,60 @@ Tests use an H2 in-memory database profile during test execution while productio
 
 ## 14. Expected Results
 
-- Application starts successfully with MySQL running
-- Tables are created or updated automatically by Hibernate
-- REST API endpoints return JSON responses
-- Validation enforces required data rules
-- Exceptions return structured error responses
+
+## Spring Security 6 + JWT Authentication
+
+The API uses Spring Security 6 with BCrypt password hashing, a custom `UserDetailsService`, and JWT bearer-token authentication. Sessions are stateless, so clients must send a valid JWT with every protected request.
+
+- Public endpoints: `POST /api/auth/register` and `POST /api/auth/login`
+- Protected endpoints: `/api/employees/**` and `/api/departments/**`
+- Unauthorized requests receive a JSON `401` response instead of an HTML page.
+
+Authentication flow:
+
+```text
+Register
+-> BCrypt password hashing
+-> Database
+
+Login
+-> AuthenticationManager
+-> JWT generation
+-> Client receives token
+
+Protected request
+-> Bearer JWT
+-> JwtAuthenticationFilter
+-> Token validation
+-> SecurityContext
+-> Controller
+```
+
+### Authentication with curl
+
+Register a user:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"Test@123","role":"USER"}'
+```
+
+Log in and copy the returned `token`:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"Test@123"}'
+```
+
+Use the token for protected endpoints:
+
+```bash
+curl http://localhost:8080/api/employees \
+  -H "Authorization: Bearer <token>"
+```
+
+The Postman collection at `postman/Spring-Security-JWT.postman_collection.json` contains the same register/login flow, requests without a token, requests with a token, and an invalid-token request.
+
+The development secret is configured with `jwt.secret` in `application.properties`. For production, replace it with a long random secret supplied through a protected environment variable or secret manager, for example `JWT_SECRET`, rather than committing it to source control.
