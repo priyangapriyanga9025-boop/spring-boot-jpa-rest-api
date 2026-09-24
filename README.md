@@ -1,228 +1,213 @@
-# Spring Boot REST API & Hibernate JPA Persistence
+# Workforce Command Center
 
-This project is a beginner-friendly Spring Boot REST API that demonstrates CRUD operations, relationship mapping, validation, and JPA persistence with MySQL.
+Enterprise Java Full Stack Capstone: a responsive Employee and Department Management Portal backed by Spring Boot, MySQL, JWT authentication, and documented REST APIs.
 
-## 1. Project Overview
+## Overview
 
-The application manages departments and employees in a business database. It follows a clean layered architecture:
+Workforce Command Center gives authenticated users one place to manage departments and employees. The browser frontend is served by Spring Boot and communicates with the real REST API using the Fetch API. No mock records or fake API responses are used.
 
-Controller
-↓
-Service
-↓
-Repository
-↓
-JPA Entity
-↓
-MySQL
+## Features
 
-## 2. Technologies Used
+- User registration and JWT login with BCrypt password hashing
+- Stateless authenticated sessions stored in browser `sessionStorage`
+- Logout that clears the current browser session
+- Responsive HTML5/CSS3/JavaScript dashboard
+- Live employee and department totals from MySQL
+- Department create, read, update, and delete workflows
+- Employee create, read, update, and delete workflows
+- Employee search by text and department filter
+- Loading, empty, success, validation, not-found, and unauthorized states
+- Structured global JSON exception responses
+- Springdoc OpenAPI documentation and bearer authorization
+- Automated MockMvc tests with an H2 test database
+
+## Technology Stack
 
 - Java 17
-- Spring Boot 3.x
-- Spring Web
-- Spring Data JPA
-- Hibernate
-- MySQL
-- Jakarta Validation
+- Spring Boot 3.3.4
+- Spring Web and Spring Security
+- Spring Data JPA and Hibernate
+- MySQL for local/runtime persistence
+- JJWT 0.12.6
+- Springdoc OpenAPI 2.6.0
 - Maven
-- JUnit 5
+- HTML5, CSS3, and browser JavaScript Fetch API
+- JUnit 5, MockMvc, Spring Security Test, and H2
 
-## 3. Features
+## Architecture
 
-- REST API for departments and employees
-- CRUD operations
-- One-to-Many and Many-to-One relationships
-- Validation with Jakarta Bean Validation
-- Custom repository queries using `@Query`
-- Global exception handling
-- JUnit 5 testing
+```text
+Browser frontend
+       |
+       v
+JWT-authenticated REST API
+       |
+       v
+Controller -> Service -> Repository -> JPA Entity -> MySQL
+```
 
-## 4. Architecture
+The frontend is served from `src/main/resources/static`. Controllers validate request DTOs and delegate business operations to services. Repositories persist `User`, `Department`, and `Employee` entities.
 
-The application follows a standard Spring Boot layered design:
+## Project Structure
 
-- Controller layer: handles HTTP requests and responses
-- Service layer: contains business logic
-- Repository layer: uses `JpaRepository` and custom queries
-- Entity layer: Hibernate/JPA entities mapped to database tables
+```text
+src/main/java/com/rabtech/api
+├── config       OpenAPI configuration
+├── controller   REST endpoints
+├── dto          Validated request and response models
+├── entity       User, Department, and Employee JPA entities
+├── exception    Resource exception and global REST advice
+├── repository   Spring Data repositories
+├── security     JWT service, filter, and Spring Security config
+└── service      Authentication and business logic
+src/main/resources
+├── application.properties
+└── static
+    ├── index.html
+    ├── css/styles.css
+    └── js/app.js
+```
 
-## 5. Entity Relationships
+## Database Setup
 
-- `Department` has many `Employee` records
-- `Employee` belongs to one `Department`
-- Relationship type: One-to-Many (Department -> Employee) and Many-to-One (Employee -> Department)
+Create the database in MySQL Workbench:
 
-## 6. API Endpoints
+```sql
+CREATE DATABASE rabtech_business_db;
+```
 
-### Employees
+The runtime configuration connects to MySQL on `localhost:3306` as `root`. Hibernate uses `ddl-auto=update` for this local project and creates or updates the tables. Use a dedicated database user and migrations before production deployment.
 
-- `GET /api/employees` - Get all employees
-- `GET /api/employees/{id}` - Get employee by ID
-- `POST /api/employees` - Create employee
-- `PUT /api/employees/{id}` - Update employee
-- `DELETE /api/employees/{id}` - Delete employee
-- `GET /api/employees/role/{role}` - Get employees by role
-- `GET /api/employees/department/{departmentName}` - Get employees by department name
-- `GET /api/employees/salary-above/{salary}` - Get employees with salary above threshold
+## Configuration
+
+Set these environment variables in the PowerShell terminal used to start the application:
+
+```powershell
+$env:DB_PASSWORD = "your_mysql_password"
+$env:JWT_SECRET = "your_long_random_jwt_secret"
+$env:JWT_EXPIRATION = "86400000"
+```
+
+Do not commit passwords, JWT values, or secret files. The repository ignores `.env`, `*.env`, and `application-local.properties`.
+
+## Run the Backend and Frontend
+
+The frontend is bundled into the Spring Boot application, so no separate frontend server is required.
+
+```powershell
+mvn clean test
+mvn spring-boot:run
+```
+
+Open the portal at `http://localhost:8080/`.
+
+Because environment variables are scoped to a PowerShell process, set `DB_PASSWORD` again when opening a new terminal before running the application.
+
+## Authentication Flow
+
+1. Register with `POST /api/auth/register` using role `USER` or `ADMIN`.
+2. Log in with `POST /api/auth/login`.
+3. The frontend stores the returned token only in `sessionStorage` for the current browser session.
+4. Protected requests send exactly `Authorization: Bearer <JWT>`.
+5. A `401 Unauthorized` response clears the session and returns the user to the login view.
+6. Logout clears all stored session values.
+
+The API is stateless; logout does not need a server-side token revocation call.
+
+## REST API
+
+### Authentication
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
 
 ### Departments
 
-- `GET /api/departments` - Get all departments
-- `GET /api/departments/{id}` - Get department by ID
-- `POST /api/departments` - Create department
-- `PUT /api/departments/{id}` - Update department
-- `DELETE /api/departments/{id}` - Delete department
+- `GET /api/departments`
+- `GET /api/departments/{id}`
+- `POST /api/departments`
+- `PUT /api/departments/{id}`
+- `DELETE /api/departments/{id}`
 
-## 7. Validation
+### Employees
 
-The API uses Jakarta Validation annotations such as:
+- `GET /api/employees`
+- `GET /api/employees/{id}`
+- `POST /api/employees`
+- `PUT /api/employees/{id}`
+- `DELETE /api/employees/{id}`
+- `GET /api/employees/role/{role}`
+- `GET /api/employees/department/{departmentName}`
+- `GET /api/employees/salary-above/{salary}`
 
-- `@NotNull`
-- `@NotBlank`
-- `@Size`
-- `@Email`
-- `@Positive`
+## Swagger / OpenAPI
 
-These rules are applied in DTOs and enforced with `@Valid` in the controllers.
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-## 8. Exception Handling
+To authorize Swagger:
 
-The application uses a global exception handler to return clean JSON responses for:
+1. Log in and copy the JWT value only.
+2. Select **Authorize** in Swagger UI.
+3. Paste only the raw JWT, without the word `Bearer`.
+4. Select **Authorize**, then close the dialog.
 
-- `ResourceNotFoundException` with HTTP 404
-- `MethodArgumentNotValidException` with HTTP 400
+Swagger adds the prefix and sends exactly `Authorization: Bearer <JWT>`. Entering `Bearer <JWT>` manually would create an invalid double prefix.
 
-## 9. Database Configuration
+## Global Exception Handling
 
-This project uses MySQL. The database name is:
+`GlobalExceptionHandler` uses `@RestControllerAdvice` and `@ExceptionHandler` for:
 
-- `rabtech_business_db`
+- `ResourceNotFoundException`: HTTP 404
+- `MethodArgumentNotValidException`: HTTP 400 with field details
+- `BadCredentialsException`: HTTP 401
+- `IllegalArgumentException`: HTTP 409
 
-Configuration is in `src/main/resources/application.properties`.
+Responses include `timestamp`, `status`, `error`, `message`, and `path`.
 
-## 10. How to Run
+## Testing
 
-1. Make sure MySQL is installed and running.
-2. Create a database named `rabtech_business_db`.
-3. Update the database password in `application.properties`.
-4. Run the application:
+Run the complete automated suite:
 
-```bash
-mvn spring-boot:run
+```powershell
+mvn test
 ```
 
-## 11. Maven Commands
+The tests cover registration, encrypted passwords, login, invalid credentials, protected routes, JWT validation, CRUD operations, validation, entity relationships, repository queries, and OpenAPI exposure. Tests use the H2 profile and do not require the MySQL password.
 
-```bash
-mvn clean test
+Build the packaged application:
+
+```powershell
 mvn clean package
-mvn spring-boot:run
 ```
 
-## 12. Sample API Requests
+## Sample API Usage
 
-### Create Department
+Register without committing real credentials:
 
-```http
-POST /api/departments
-Content-Type: application/json
-
-{
-  "name": "Engineering"
-}
+```powershell
+$body = @{ username = "demo_user"; password = "ChangeThisPassword123!"; role = "USER" } | ConvertTo-Json
+Invoke-RestMethod http://localhost:8080/api/auth/register -Method Post -ContentType 'application/json' -Body $body
 ```
 
-### Create Employee
+After login, use the returned token in memory:
 
-```http
-POST /api/employees
-Content-Type: application/json
-
-{
-  "name": "Priyanga",
-  "email": "priyanga@example.com",
-  "role": "Developer",
-  "salary": 50000.0,
-  "departmentId": 1
-}
+```powershell
+Invoke-WebRequest http://localhost:8080/api/departments -Headers @{ Authorization = "Bearer <JWT>" }
 ```
 
-### Get Employee by ID
+## Screenshots and Demo
 
-```http
-GET /api/employees/1
-```
+For the capstone submission, capture:
 
-## 13. Testing
+- Login or registration screen
+- Authenticated dashboard with live employee and department data
+- Employee edit and search workflow
+- Department management workflow
+- Swagger UI authorized with a raw JWT
 
-The project includes JUnit 5 tests that verify:
+A short walkthrough should show registration, login, dashboard loading, department and employee CRUD, logout, Swagger authorization, and the structured 404 response for `/api/departments/9999`.
 
-- application context loads
-- CRUD endpoints
-- validation failure
-- not found handling
-- repository query behavior
-- department relationship mapping
+## GitHub Readiness
 
-Tests use an H2 in-memory database profile during test execution while production keeps MySQL configuration.
-
-## 14. Expected Results
-
-
-## Spring Security 6 + JWT Authentication
-
-The API uses Spring Security 6 with BCrypt password hashing, a custom `UserDetailsService`, and JWT bearer-token authentication. Sessions are stateless, so clients must send a valid JWT with every protected request.
-
-- Public endpoints: `POST /api/auth/register` and `POST /api/auth/login`
-- Protected endpoints: `/api/employees/**` and `/api/departments/**`
-- Unauthorized requests receive a JSON `401` response instead of an HTML page.
-
-Authentication flow:
-
-```text
-Register
--> BCrypt password hashing
--> Database
-
-Login
--> AuthenticationManager
--> JWT generation
--> Client receives token
-
-Protected request
--> Bearer JWT
--> JwtAuthenticationFilter
--> Token validation
--> SecurityContext
--> Controller
-```
-
-### Authentication with curl
-
-Register a user:
-
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"Test@123","role":"USER"}'
-```
-
-Log in and copy the returned `token`:
-
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","password":"Test@123"}'
-```
-
-Use the token for protected endpoints:
-
-```bash
-curl http://localhost:8080/api/employees \
-  -H "Authorization: Bearer <token>"
-```
-
-The Postman collection at `postman/Spring-Security-JWT.postman_collection.json` contains the same register/login flow, requests without a token, requests with a token, and an invalid-token request.
-
-The development secret is configured with `jwt.secret` in `application.properties`. For production, replace it with a long random secret supplied through a protected environment variable or secret manager, for example `JWT_SECRET`, rather than committing it to source control.
+The project contains the Maven source, tests, static frontend, Postman collection, and this setup documentation. Secrets are supplied through environment variables and are excluded by `.gitignore`. Push to GitHub only after adding screenshots and reviewing the repository for local-only files.

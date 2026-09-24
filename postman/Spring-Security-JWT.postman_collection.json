@@ -12,6 +12,14 @@
     {
       "key": "token",
       "value": ""
+    },
+    {
+      "key": "testUsername",
+      "value": ""
+    },
+    {
+      "key": "testPassword",
+      "value": ""
     }
   ],
   "item": [
@@ -27,7 +35,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Test@123\",\n  \"role\": \"USER\"\n}"
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"{{testPassword}}\",\n  \"role\": \"USER\"\n}"
         },
         "url": "{{baseUrl}}/api/auth/register"
       }
@@ -56,7 +64,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Test@123\"\n}"
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"{{testPassword}}\"\n}"
         },
         "url": "{{baseUrl}}/api/auth/login"
       }

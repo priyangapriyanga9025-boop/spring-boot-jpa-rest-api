@@ -40,7 +40,7 @@ public class Employee {
     @Positive(message = "Salary must be positive")
     private Double salary;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "department_id", nullable = false)
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "employees"})
     private Department department;
